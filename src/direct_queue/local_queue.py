@@ -11,7 +11,7 @@ from helper.util import convert_bytearray_to_dict
 
 
 class LocalQueue(Queue):
-    DUPLICATED = False
+    DUPLICATED = True
     TSDB_NAME = "tsdb"
     DLQDB_NAME = "dlqdb"
     DB_MAP_SIZE = 512 * 1024 * 1024  # default map isze : 250M
@@ -66,7 +66,7 @@ class LocalQueue(Queue):
         tstamp = LocalQueue.convert_to_bin(tstamp)
         tdata = LocalQueue.convert_to_bin(tdata)
         with self._imdb_env.begin(db=db, write=True) as txn:
-            txn.put(tstamp, tdata, db=db, dupdata=LocalQueue.DUPLICATED, overwrite=False)
+            txn.put(tstamp, tdata, db=db)
 
     def pop(self, key, dlq=False):
         key_bytes = LocalQueue.convert_to_bin(key)
