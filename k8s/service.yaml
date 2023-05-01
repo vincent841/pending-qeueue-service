@@ -2,8 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: schevt-mgr
-  name: schevt-mgr-svc
+    app: pending-queue
+  name: pending-queue-svc
   namespace: schevt
 spec:
   type: ClusterIP
@@ -12,4 +12,4 @@ spec:
       port: 80
       targetPort: 9902
   selector:
-    app: schevt-mgr
+    app: pending-queue

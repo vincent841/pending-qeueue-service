@@ -1,7 +1,7 @@
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: schevt-db-storage
+  name: pending-queue-storage
 provisioner: kubernetes.io/aws-ebs
 parameters:
   type: gp2
@@ -12,64 +12,61 @@ mountOptions:
 volumeBindingMode: Immediate
 
 ---
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: schevt-db-pv-claim
+  name: pending-queue-pv-claim
   namespace: schevt
   labels:
-    app: schevt-db
+    app: pending-queue
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 20Gi
-  storageClassName: schevt-db-storage
+  storageClassName: pending-queue-storage
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: schevt-db
+  name: pending-queue
   namespace: schevt
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: schevt-db
+      app: pending-queue
       tier: postgresql
   template:
     metadata:
       labels:
-        app: schevt-db
+        app: pending-queue
         tier: postgresql
     spec:
       containers:
-      - name: postgres
-        image: postgres:13.3
-        imagePullPolicy: "IfNotPresent"
-        ports:
-        - containerPort: 5432
-        envFrom:
-          - secretRef:
-              name: schevt-db-secret
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: schevt-db-pv
+        - name: postgres
+          image: postgres:13.3
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: pending-queue-secret
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: pending-queue-pv
       volumes:
-      - name: schevt-db-pv
-        persistentVolumeClaim:
-          claimName: schevt-db-pv-claim
+        - name: pending-queue-pv
+          persistentVolumeClaim:
+            claimName: pending-queue-pv-claim
 
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
-  name: schevt-db-secret
+  name: pending-queue-secret
   namespace: schevt
 stringData:
   POSTGRES_DB: schevt
@@ -77,15 +74,13 @@ stringData:
   POSTGRES_PASSWORD: abcd1234
   PGDATA: /var/lib/postgresql/data/pgdata
 
-
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: schevt-db
-  name: schevt-db-svc
+    app: pending-queue
+  name: pending-queue-svc
   namespace: schevt
 spec:
   type: ClusterIP
@@ -94,5 +89,4 @@ spec:
       port: 5432
       targetPort: 5432
   selector:
-    app: schevt-db
-
+    app: pending-queue

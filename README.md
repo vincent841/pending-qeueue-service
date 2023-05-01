@@ -65,7 +65,7 @@ python3 -m unittest discover -s test -p "*_test.py"
 
 ### 쿠버네티스 배포
 
-k8s/* 파일들을 참조 합니다.
+k8s/* 파일들을 참조하여 배포합니다.
 
 ```bash
 kubectl apply -f k8s/statefulset-readwriteonce.yaml
