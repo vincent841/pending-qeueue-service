@@ -1,4 +1,3 @@
-import os
 import json
 from deepdiff import DeepDiff
 from datetime import datetime, timezone
@@ -49,13 +48,22 @@ class PendingEventHandler:
         except Exception as ex:
             log_error(f"Initializaiton Error: {ex}")
 
+    def create_db_key(self, pending_event):
+        due = int(pending_event.get("due", 0))
+        stuff = pending_event.get("stuff", {})
+        return ",".join([str(due), json.dumps(stuff)])
+    
+    def extract_key_data(self, key):
+        key_list = key.split(",")
+        return (int(key_list[0]), json.loads(key_list[1]))
+
     def put(self, pending_event: dict):
         try:
             # TODO: check the duplicated event here...
-            due = pending_event.get("due")
-            assert type(due) == int
+            db_key = self.create_db_key(pending_event)
+
             # store the updated schedule event
-            self.pending_queue_db.put(due, pending_event)
+            self.pending_queue_db.put(db_key, pending_event)
             return pending_event
         except Exception as ex:
             print(f"Exception: {ex}")
@@ -66,21 +74,22 @@ class PendingEventHandler:
             toppick = {}
             now = datetime.now().timestamp()
             pending_list = self.pending_queue_db.get_key_value_list()
+            extracted_pending_key = None
             for pending in pending_list:
                 (pending_key, pending_event) = pending
-                pending_key = int(pending_key)
+                (due, stuff) = self.extract_key_data(pending_key)
 
-                # TODO: need to check pending_list is sorted by key
-                if pending_key > now:
-                    break
+                if due > now:
+                    continue
 
                 if pending_event["tag"] != tag:
                     continue
 
-                if not toppick or toppick["priority"] < pending_event["priority"]:
+                if not toppick or (toppick["due"] < pending_event["due"] and (toppick["due"] == pending_event["due"] and toppick["priority"] < pending_event["priority"])):
                     toppick = pending_event
+                    extracted_pending_key = pending_key
             
-            self.pending_queue_db.pop(toppick["due"]) if toppick else None
+            self.pending_queue_db.pop(extracted_pending_key) if toppick else None
 
             if not toppick:
                 raise ValueError
@@ -92,24 +101,27 @@ class PendingEventHandler:
 
     def cancel(self, stuff: dict):
         try:
-            pending_key_list = self.pending_queue_db.get_key_value_list()
-            for pending in pending_key_list:
+            pending_key_value_list = self.pending_queue_db.get_key_value_list()
+            for pending in pending_key_value_list:
                 (pending_key, pending_event) = pending
                 if DeepDiff(stuff, pending_event["stuff"], ignore_order=True) == {}:
                     self.pending_queue_db.pop(pending_key)
                     return pending_event
+            raise ValueError
+        except ValueError as ex:
+            raise HTTPException(status_code=404, detail=f"Pending event not found")
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"Exception: {ex}")
     
     def reset(self, tag: str):
         reset_list = []
         try:
-            pending_key_list = self.pending_queue_db.get_key_list()
-            for pending in pending_key_list:
-                pending_stuff = json.loads(pending["stuff"])
-                if pending_stuff["tag"] == tag:
-                    self.pending_queue_db.pop(pending["key"])
-                    reset_list.append(pending_stuff)
+            pending_key_value_list = self.pending_queue_db.get_key_value_list()
+            for pending in pending_key_value_list:
+                (pending_key, pending_event) = pending
+                if pending_event["tag"] == tag:
+                    self.pending_queue_db.pop(pending_key)
+                    reset_list.append(pending_event)
             return reset_list
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"Exception: {ex}")
@@ -119,7 +131,7 @@ class PendingEventHandler:
         try:
             key_value_list = self.pending_queue_db.get_key_value_list()
             for key_value in key_value_list:
-                (pending_key, pending_event) = key_value
+                (_, pending_event) = key_value
                 if tag == pending_event["tag"]:
                     result_list.append(pending_event)
             return result_list

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Dict
+from typing import List
 
 
 """
@@ -15,6 +15,9 @@ class PendingQueue(BaseModel):
 
 class PendingApiResult(BaseModel):
     event: PendingQueue = Field(default=None, title="pending event")
+
+class PendingApiResults(BaseModel):
+    events: List[PendingQueue] = Field(default=[], title="pending event list")
 
 
 class PendingStuff(BaseModel):

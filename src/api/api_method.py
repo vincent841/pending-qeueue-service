@@ -1,5 +1,3 @@
-import traceback
-
 from pending_event.pending_event_handler import PendingEventHandler
 
 import sys
@@ -36,4 +34,5 @@ def api_get_list(tag: str = ""):
 
 def api_reset(tag: str):
     log_info(f"request reset: {tag}")
-    pass
+    pending_event_handler = PendingEventHandler()
+    return pending_event_handler.reset(tag)
