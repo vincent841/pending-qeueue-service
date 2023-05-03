@@ -32,6 +32,11 @@ def api_get(id: str = ""):
     pending_event_handler = PendingEventHandler()
     return pending_event_handler.get(id)
 
+def api_delete(id: str = ""):
+    log_info(f"request delete: {id}")
+    pending_event_handler = PendingEventHandler()
+    return pending_event_handler.delete(id)
+
 def api_get_list(tag: str = ""):
     log_info(f"request cancle: {tag}")
     pending_event_handler = PendingEventHandler()

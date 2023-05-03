@@ -155,6 +155,20 @@ class PendingEventHandler:
             raise HTTPException(status_code=404, detail=f"Pending event not found")
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"Exception: {ex}")    
+        
+    def delete(self, id: str = ""):
+        try:
+            key_value_list = self.pending_queue_db.get_key_value_list()
+            for key_value in key_value_list:
+                (pending_key, pending_event) = key_value
+                if id == pending_event["id"]:
+                    self.pending_queue_db.pop(pending_key)
+                    return pending_event
+            raise ValueError
+        except ValueError as ex:
+            raise HTTPException(status_code=404, detail=f"Pending event not found")
+        except Exception as ex:
+            raise HTTPException(status_code=500, detail=f"Exception: {ex}")    
     
 
 
