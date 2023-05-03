@@ -4,6 +4,7 @@ from typing import List
 from api.api_method import (
     api_put,
     api_pick,
+    api_get,
     api_cancel,
     api_get_list,
     api_reset
@@ -43,6 +44,16 @@ async def put_pending_queue(inputs: PendingQueue) -> PendingApiResult:
     
     """
     return {"event": api_put(inputs.dict())}
+
+@fast_api.get("/pending-event/{id}")
+async def get_pending_evebt(
+    id: str = "",
+) -> PendingQueue:
+    """
+    get the list of pending events with a specific tag
+    
+    """
+    return api_get(id)
 
 
 @fast_api.get("/pending-events")

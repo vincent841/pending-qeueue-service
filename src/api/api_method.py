@@ -27,6 +27,11 @@ def api_cancel(stuff: dict):
     pending_event_handler = PendingEventHandler()
     return pending_event_handler.cancel(stuff)
 
+def api_get(id: str = ""):
+    log_info(f"request get: {id}")
+    pending_event_handler = PendingEventHandler()
+    return pending_event_handler.get(id)
+
 def api_get_list(tag: str = ""):
     log_info(f"request cancle: {tag}")
     pending_event_handler = PendingEventHandler()

@@ -1,4 +1,5 @@
 import json
+import uuid
 from deepdiff import DeepDiff
 from datetime import datetime, timezone
 from fastapi import HTTPException
@@ -50,16 +51,20 @@ class PendingEventHandler:
 
     def create_db_key(self, pending_event):
         due = int(pending_event.get("due", 0))
-        stuff = pending_event.get("stuff", {})
-        return ",".join([str(due), json.dumps(stuff)])
+        id = pending_event.get("id", "")
+        return ",".join([str(due), id])
     
     def extract_key_data(self, key):
         key_list = key.split(",")
-        return (int(key_list[0]), json.loads(key_list[1]))
+        return (int(key_list[0]), key_list[1])
 
     def put(self, pending_event: dict):
         try:
-            # TODO: check the duplicated event here...
+            # generate the event id
+            event_id = uuid.uuid4()
+            pending_event["id"] = str(event_id)
+
+            # TODO: need to check if the duplicated event exists here...
             db_key = self.create_db_key(pending_event)
 
             # store the updated schedule event
@@ -77,7 +82,7 @@ class PendingEventHandler:
             extracted_pending_key = None
             for pending in pending_list:
                 (pending_key, pending_event) = pending
-                (due, stuff) = self.extract_key_data(pending_key)
+                (due, _) = self.extract_key_data(pending_key)
 
                 if due > now:
                     continue
@@ -137,6 +142,21 @@ class PendingEventHandler:
             return result_list
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"Exception: {ex}")
+
+    def get(self, id: str = ""):
+        try:
+            key_value_list = self.pending_queue_db.get_key_value_list()
+            for key_value in key_value_list:
+                (_, pending_event) = key_value
+                if id == pending_event["id"]:
+                    return pending_event
+            raise ValueError
+        except ValueError as ex:
+            raise HTTPException(status_code=404, detail=f"Pending event not found")
+        except Exception as ex:
+            raise HTTPException(status_code=500, detail=f"Exception: {ex}")    
+    
+
 
 
   
