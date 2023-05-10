@@ -1,4 +1,5 @@
 from pending_event.pending_event_handler import PendingEventHandler
+from api.api_data_type import PendingEvent
 
 import sys
 from helper.logger import Logger
@@ -12,10 +13,10 @@ log_warning = log_message.warning
 log_error = log_message.error
 
 
-def api_put(input_req):
-    log_info(f"request put: {input_req}")
+def api_put(pending_event: PendingEvent) -> PendingEvent:
+    log_info(f"request put: {pending_event}")
     pending_event_handler = PendingEventHandler()
-    return pending_event_handler.put(input_req)
+    return pending_event_handler.put(pending_event)
 
 def api_pick(tag: str = ""):
     log_info(f"request pick: {tag}")

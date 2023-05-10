@@ -7,14 +7,14 @@ from config import Config
 Config("config.yaml")
 
 if __name__ == "__main__":
-    port = 9902
+    port = 9903
     try:
         if len(sys.argv) == 2:
             port = int(sys.argv[1])
         print(f"server port: {port}")
     except ValueError:
-        print("argument error, so set 9902 as the default port.", sys.stderr)
-        port = 9902
+        print("argument error, so set 9903 as the default port.", sys.stderr)
+        port = 9903
 
     # run fastapi server using uvicorn
     uvicorn.run(

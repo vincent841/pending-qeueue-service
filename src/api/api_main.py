@@ -11,12 +11,12 @@ from api.api_method import (
     api_reset
 )
 
-from api.api_data_type import PendingQueue, PendingApiResult, PendingStuff, PendingApiResults
+from api.api_data_type import PendingEvent, PendingStuff
 from pending_event.pending_event_handler import PendingEventHandler
 
 
 fast_api = FastAPI(
-    title="PendingQueue Serivce API",
+    title="PendingEvent Serivce API",
     description="This service registers pending queues and manages registered ones.",
     contact={
         "name": "hatiolab",
@@ -39,17 +39,17 @@ async def shutdown_event():
 
 
 @fast_api.post("/pending-event")
-async def put_pending_queue(inputs: PendingQueue) -> PendingApiResult:
+async def put_pending_queue(inputs: PendingEvent) -> PendingEvent:
     """
     register a pending event
     
     """
-    return {"event": api_put(inputs.dict())}
+    return api_put(inputs)
 
 @fast_api.get("/pending-event/{id}")
-async def get_pending_evebt(
+async def get_pending_event(
     id: str = "",
-) -> PendingQueue:
+) -> PendingEvent:
     """
     get the list of pending events with a specific tag
     
@@ -59,7 +59,7 @@ async def get_pending_evebt(
 @fast_api.delete("/pending-event/{id}")
 async def delete_pending_evebt(
     id: str = "",
-) -> PendingQueue:
+) -> PendingEvent:
     """
     get the list of pending events with a specific tag
     
@@ -70,7 +70,7 @@ async def delete_pending_evebt(
 @fast_api.get("/pending-events")
 async def get_pending_list(
     tag: str = "",
-) -> List[PendingQueue]:
+) -> List[PendingEvent]:
     """
     get the list of pending events with a specific tag
     
@@ -81,29 +81,29 @@ async def get_pending_list(
 @fast_api.post("/pending-queue/pick")
 async def pick_pending_queue(
     tag: str = "",
-) -> PendingApiResult:
+) -> PendingEvent:
     """
     pick a pending event considering both due and priority
     
     """
-    return {"event": api_pick(tag)}
+    return api_pick(tag)
 
 
 @fast_api.post("/pending-queue/cancel")
-async def cacnel_pending_queues(pending_stuff: PendingStuff) -> PendingApiResult:
+async def cacnel_pending_queues(pending_stuff: PendingStuff) -> PendingEvent:
     """
     delete pending events
     """
     cancel_input = pending_stuff.dict()
-    return {"event": api_cancel(cancel_input["stuff"])}
+    return api_cancel(cancel_input["stuff"])
 
 
 @fast_api.post("/pending-queue/reset")
-async def reset_pending_queues(tag: str) -> PendingApiResults:
+async def reset_pending_queues(tag: str) -> List[PendingEvent]:
     """
     clear pending events with the specific tag
     """
-    return {"events": api_reset(tag)}
+    return api_reset(tag)
 
 
 

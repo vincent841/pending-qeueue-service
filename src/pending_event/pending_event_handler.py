@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from config import Config
 from direct_queue.local_queue import LocalQueue
 from direct_queue.pg_queue import PGQueue
-
+from api.api_data_type import PendingEvent
 
 import sys
 from helper.logger import Logger
@@ -58,18 +58,20 @@ class PendingEventHandler:
         key_list = key.split(",")
         return (int(key_list[0]), key_list[1])
 
-    def put(self, pending_event: dict):
+    def put(self, pending_event: PendingEvent):
         try:
+            pending_event_dict = pending_event.dict()
+
             # generate the event id
             event_id = uuid.uuid4()
-            pending_event["id"] = str(event_id)
+            pending_event_dict["id"] = str(event_id)
 
             # TODO: need to check if the duplicated event exists here...
-            db_key = self.create_db_key(pending_event)
+            db_key = self.create_db_key(pending_event_dict)
 
             # store the updated schedule event
-            self.pending_queue_db.put(db_key, pending_event)
-            return pending_event
+            self.pending_queue_db.put(db_key, pending_event_dict)
+            return pending_event_dict
         except Exception as ex:
             print(f"Exception: {ex}")
             raise HTTPException(status_code=500, detail=f"Exception: {ex}")
