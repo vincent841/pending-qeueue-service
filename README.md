@@ -1,5 +1,9 @@
 # Pending Queue Service
 
+## Deprecated
+
+moved to https://github.com/hatiolab/operato-foundation-service.git
+
 ## API Document
 
 로컬 설치의 경우 다음 URL을 통해서 제공되는 API들을 확인하실 수 있습니다.
